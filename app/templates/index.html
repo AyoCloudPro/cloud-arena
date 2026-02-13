@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Arena - Performance Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #131824;
+            --bg-card: #1a1f35;
+            --accent-blue: #00d9ff;
+            --accent-cyan: #00ffcc;
+            --accent-red: #ff3366;
+            --text-primary: #e0e7ff;
+            --text-secondary: #8b93b5;
+            --border-color: rgba(0, 217, 255, 0.2);
+            --glow-blue: rgba(0, 217, 255, 0.4);
+            --glow-cyan: rgba(0, 255, 204, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1034 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 217, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 217, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px var(--glow-blue);
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                filter: drop-shadow(0 0 10px var(--glow-blue));
+            }
+            to {
+                filter: drop-shadow(0 0 20px var(--glow-cyan));
+            }
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.8s ease-out 0.2s backwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 8px 32px rgba(0, 217, 255, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .card-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 0.25rem;
+        }
+
+        .card-subtext {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .status-prod {
+            background: rgba(0, 255, 204, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid var(--accent-cyan);
+        }
+
+        .status-staging {
+            background: rgba(255, 179, 0, 0.15);
+            color: #ffb300;
+            border: 1px solid #ffb300;
+        }
+
+        /* Progress bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            position: relative;
+            box-shadow: 0 0 10px var(--glow-blue);
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Duel button */
+        .duel-section {
+            text-align: center;
+            margin: 3rem 0;
+            animation: fadeIn 1s ease-out 0.4s backwards;
+        }
+
+        .duel-button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 1.5rem 3rem;
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 100%);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px var(--glow-blue);
+        }
+
+        .duel-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .duel-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .duel-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 50px var(--glow-cyan);
+        }
+
+        .duel-button:active {
+            transform: scale(0.98);
+        }
+
+        .duel-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .duel-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Duel results */
+        .duel-results {
+            display: none;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 2rem;
+            align-items: center;
+            margin-top: 2rem;
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .duel-results.active {
+            display: grid;
+        }
+
+        .cloud-result {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .cloud-result.winner {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 255, 204, 0.05);
+            box-shadow: 0 0 30px var(--glow-cyan);
+            animation: winnerPulse 1s ease-in-out;
+        }
+
+        @keyframes winnerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .cloud-result.loser {
+            opacity: 0.5;
+        }
+
+        .cloud-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .cloud-time {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .winner .cloud-time {
+            color: var(--accent-cyan);
+        }
+
+        .vs-divider {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .winner-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: var(--bg-primary);
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 1rem;
+            animation: bounce 0.5s ease-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .latency-diff {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: var(--accent-cyan);
+        }
+
+        /* Loading state */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 217, 255, 0.3);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .duel-results {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .vs-divider {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CLOUD ARENA</h1>
+            <div class="subtitle">Performance Dashboard</div>
+        </header>
+
+        <div class="dashboard-grid" id="dashboardGrid">
+            <!-- Cards will be populated by JavaScript -->
+        </div>
+
+        <div class="duel-section">
+            <button class="duel-button" id="duelButton" onclick="startCloudDuel()">
+                <span>⚡ Start Cloud Duel</span>
+            </button>
+        </div>
+
+        <div class="duel-results" id="duelResults">
+            <div class="cloud-result" id="cloud1Result">
+                <div class="cloud-name" id="cloud1Name">Cloud 1</div>
+                <div class="cloud-time" id="cloud1Time">---</div>
+                <div class="card-subtext">Response Time</div>
+                <div id="cloud1Winner"></div>
+            </div>
+
+            <div class="vs-divider">VS</div>
+
+            <div class="cloud-result" id="cloud2Result">
+                <div class="cloud-name" id="cloud2Name">Cloud 2</div>
+                <div class="cloud-time" id="cloud2Time">---</div>
+                <div class="card-subtext">Response Time</div>
+                <div id="cloud2Winner"></div>
+            </div>
+        </div>
+
+        <div class="latency-diff" id="latencyDiff"></div>
+    </div>
+
+    <script>
+        // Configuration - Update these endpoints to match your backend
+        const CONFIG = {
+            currentStatsEndpoint: '/api/stats',
+            cloud1Endpoint: '/api/cloud1',
+            cloud2Endpoint: '/api/cloud2',
+            pollInterval: 5000 // Update dashboard every 5 seconds
+        };
+
+        // Dashboard data structure
+        let dashboardData = {
+            cloud: 'Loading...',
+            responseTime: '---',
+            region: 'Loading...',
+            memoryUsage: 0,
+            cpuUsage: 0,
+            dockerImage: 'Loading...',
+            environment: 'prod',
+            buildNumber: '---'
+        };
+
+        // Initialize dashboard
+        function initDashboard() {
+            renderDashboard();
+            fetchCurrentStats();
+            // Poll for updates
+            setInterval(fetchCurrentStats, CONFIG.pollInterval);
+        }
+
+        // Fetch current stats from backend
+        async function fetchCurrentStats() {
+            try {
+                const response = await fetch(CONFIG.currentStatsEndpoint);
+                if (response.ok) {
+                    dashboardData = await response.json();
+                    renderDashboard();
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                // Continue with existing data
+            }
+        }
+
+        // Render dashboard cards
+        function renderDashboard() {
+            const grid = document.getElementById('dashboardGrid');
+            grid.innerHTML = `
+                <div class="card">
+                    <div class="card-label">Cloud Provider</div>
+                    <div class="card-value">${dashboardData.cloud}</div>
+                    <div class="card-subtext">Currently Serving</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-label">Response Time</div>
+                    <div class="card-value">${dashboardData.responseTime}</div>
+                    <div class="card-subtext">Last Request</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-label">Region</div>
+                    <div class="card-value">${dashboardData.region}</div>
+                    <div class="card-subtext">Deployment Location</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-label">Memory Usage</div>
+                    <div class="card-value">${dashboardData.memoryUsage}%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${dashboardData.memoryUsage}%"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-label">CPU Usage</div>
+                    <div class="card-value">${dashboardData.cpuUsage}%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${dashboardData.cpuUsage}%"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-label">Docker Image</div>
+                    <div class="card-value" style="font-size: 1.2rem; word-break: break-all;">${dashboardData.dockerImage}</div>
+                    <div class="card-subtext">Container Version</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-label">Environment</div>
+                    <div class="card-value">
+                        <span class="status-badge ${dashboardData.environment === 'prod' ? 'status-prod' : 'status-staging'}">
+                            ${dashboardData.environment}
+                        </span>
+                    </div>
+                    <div class="card-subtext">Deployment Stage</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-label">Build Number</div>
+                    <div class="card-value">#${dashboardData.buildNumber}</div>
+                    <div class="card-subtext">GitHub Actions</div>
+                </div>
+            `;
+        }
+
+        // Start cloud duel - triggers requests to both endpoints
+        async function startCloudDuel() {
+            const button = document.getElementById('duelButton');
+            const results = document.getElementById('duelResults');
+            const cloud1Result = document.getElementById('cloud1Result');
+            const cloud2Result = document.getElementById('cloud2Result');
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.innerHTML = '<span><span class="loading"></span> Dueling...</span>';
+            
+            // Reset previous results
+            results.classList.remove('active');
+            cloud1Result.classList.remove('winner', 'loser');
+            cloud2Result.classList.remove('winner', 'loser');
+            document.getElementById('cloud1Winner').innerHTML = '';
+            document.getElementById('cloud2Winner').innerHTML = '';
+            document.getElementById('latencyDiff').innerHTML = '';
+
+            try {
+                // Trigger both requests simultaneously
+                const startTime1 = performance.now();
+                const startTime2 = performance.now();
+
+                const [response1, response2] = await Promise.all([
+                    fetch(CONFIG.cloud1Endpoint).then(async (res) => {
+                        const endTime = performance.now();
+                        const data = await res.json();
+                        return {
+                            time: endTime - startTime1,
+                            name: data.cloud || 'Cloud 1',
+                            data: data
+                        };
+                    }),
+                    fetch(CONFIG.cloud2Endpoint).then(async (res) => {
+                        const endTime = performance.now();
+                        const data = await res.json();
+                        return {
+                            time: endTime - startTime2,
+                            name: data.cloud || 'Cloud 2',
+                            data: data
+                        };
+                    })
+                ]);
+
+                // Display results
+                displayDuelResults(response1, response2);
+
+            } catch (error) {
+                console.error('Error during duel:', error);
+                alert('Duel failed! Check console for details.');
+            } finally {
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '<span>⚡ Start Cloud Duel</span>';
+            }
+        }
+
+        // Display duel results with winner animation
+        function displayDuelResults(response1, response2) {
+            const results = document.getElementById('duelResults');
+            const cloud1Result = document.getElementById('cloud1Result');
+            const cloud2Result = document.getElementById('cloud2Result');
+
+            // Update cloud names
+            document.getElementById('cloud1Name').textContent = response1.name;
+            document.getElementById('cloud2Name').textContent = response2.name;
+
+            // Update times
+            document.getElementById('cloud1Time').textContent = `${response1.time.toFixed(0)}ms`;
+            document.getElementById('cloud2Time').textContent = `${response2.time.toFixed(0)}ms`;
+
+            // Determine winner
+            const latencyDiff = Math.abs(response1.time - response2.time);
+            let winner, loser;
+
+            if (response1.time < response2.time) {
+                winner = cloud1Result;
+                loser = cloud2Result;
+                document.getElementById('cloud1Winner').innerHTML = '<div class="winner-badge">🏆 Winner</div>';
+            } else {
+                winner = cloud2Result;
+                loser = cloud1Result;
+                document.getElementById('cloud2Winner').innerHTML = '<div class="winner-badge">🏆 Winner</div>';
+            }
+
+            // Apply winner/loser styling
+            winner.classList.add('winner');
+            loser.classList.add('loser');
+
+            // Show latency difference
+            document.getElementById('latencyDiff').innerHTML = 
+                `<strong>Latency Difference:</strong> ${latencyDiff.toFixed(0)}ms`;
+
+            // Show results with animation
+            results.classList.add('active');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
