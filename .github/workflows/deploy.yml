@@ -1,38 +1,41 @@
 name: Deploy to Cloud Run
-
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - destroy
 
 jobs:
   deploy:
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'deploy')
     permissions:
       contents: 'read'
       id-token: 'write'
-
     runs-on: ubuntu-latest
-
     env:
       PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       REGION: ${{ secrets.GCP_REGION }}
       SERVICE_NAME: cloud-arena
       REPOSITORY: cloud-arena
-
     steps:
       - uses: actions/checkout@v4
-
       - id: auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_NAME }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
-
       - uses: google-github-actions/setup-gcloud@v2
-
       - name: Configure Docker
         run: gcloud auth configure-docker $REGION-docker.pkg.dev
-
       - name: Create Artifact Registry Repository
         run: |
           gcloud artifacts repositories describe $REPOSITORY \
@@ -42,13 +45,11 @@ jobs:
             --repository-format=docker \
             --location=$REGION \
             --description="Docker repository for Cloud Arena"
-
       - name: Build and Push
         run: |
           IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }}"
           docker build -t $IMAGE .
           docker push $IMAGE
-
       - name: Deploy
         run: |
           gcloud run deploy $SERVICE_NAME \
@@ -56,10 +57,9 @@ jobs:
             --region $REGION \
             --platform managed \
             --quiet
-
   
   destroy:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
@@ -70,23 +70,20 @@ jobs:
       SERVICE_NAME: cloud-arena
       REPOSITORY: cloud-arena
       PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-
     steps:
       - uses: actions/checkout@v4
-
       - id: auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_NAME }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
-
+      - uses: google-github-actions/setup-gcloud@v2
       - name: Destroy Cloud Run Service
         run: |
           gcloud run services delete $SERVICE_NAME \
             --region $REGION \
             --quiet
         continue-on-error: true
-
       - name: Destroy Artifact Registry Repository
         run: |
           gcloud artifacts repositories delete $REPOSITORY \
