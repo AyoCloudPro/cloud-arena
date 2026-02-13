@@ -33,6 +33,16 @@ jobs:
       - name: Configure Docker
         run: gcloud auth configure-docker $REGION-docker.pkg.dev
 
+      - name: Create Artifact Registry Repository
+        run: |
+          gcloud artifacts repositories describe $REPOSITORY \
+            --location=$REGION \
+            || \
+          gcloud artifacts repositories create $REPOSITORY \
+            --repository-format=docker \
+            --location=$REGION \
+            --description="Docker repository for Cloud Arena"
+
       - name: Build and Push
         run: |
           IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }}"
