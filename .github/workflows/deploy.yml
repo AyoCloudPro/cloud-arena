@@ -57,3 +57,39 @@ jobs:
             --platform managed \
             --quiet
 
+  
+  destroy:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    
+    env:
+      REGION: ${{ secrets.GCP_REGION }}
+      SERVICE_NAME: cloud-arena
+      REPOSITORY: cloud-arena
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_NAME }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Destroy Cloud Run Service
+        run: |
+          gcloud run services delete $SERVICE_NAME \
+            --region $REGION \
+            --quiet
+        continue-on-error: true
+
+      - name: Destroy Artifact Registry Repository
+        run: |
+          gcloud artifacts repositories delete $REPOSITORY \
+            --location=$REGION \
+            --quiet
+        continue-on-error: true
